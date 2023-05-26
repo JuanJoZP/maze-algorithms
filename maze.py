@@ -1,67 +1,47 @@
+from typing import List, Tuple
+from random import choice, randint
 import numpy as np
-import matplotlib.pyplot as plt
-import random
+import time
+
+# maze generation using wilson algorith (loop erased random walk)
+def loop_erased(walk, grid):
+    # ME FALTA VER SI DEPRONTO SE TROCAN X Y
+    directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    if not walk:
+        zeros = np.argwhere(grid == 0)
+        walk.append(zeros[np.random.randint(len(zeros))])
+
+    next_pos = np.add(np.array(walk[-1]), np.array(choice(directions)))
+
+    # if grid.is_active(next_pos):  # walk closed on maze
+    # return walk
+
+    if np.any((next_pos < 0) | (next_pos >= len(grid))):  # if walk out of bounds
+        return loop_erased(walk, grid)  # keep walking with diferent direction
+
+    next_pos = next_pos.tolist()
+
+    if grid[next_pos[0]][next_pos[1]] == 1 and len(walk) > 2:
+        walk.append(next_pos)
+        return walk  # returns if walk closed on maze
+
+    try:
+        print(walk)
+        print(next_pos)
+
+        i = walk.index(next_pos)
+        return loop_erased(walk[: i + 1], grid)  # erase loop
+    except ValueError:  # throws if no loop
+        walk.append(next_pos)
+        return loop_erased(walk, grid)  # keep walking
 
 
-def isAdjacent(x1, y1, x2, y2):
-    xv = abs(x1 - x2)
-    yv = abs(y1 - y2)
+grid = [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+]
 
-    if xv + yv <= 1:
-        return True
-    else:
-        return False
-
-
-def isOutOfRange(x, y, max):
-    if (x > max or y > max):
-        return True
-    if (x < 0 or y < 0):
-        return True
-    return False
-
-
-def checkAdjacent(x, y, i, max):
-    # check if (x[i], y[i]) is adjacent to any point in the path
-    for j in range(i-2, -1, -1):
-        if (isOutOfRange(x[i], y[i], max)):
-            return i-1
-        if (isAdjacent(x[i], y[i], x[j], y[j])):
-            return j
-    return i
-
-
-def randomwalk2D(n, x, y, i, max):
-    directions = ["UP", "DOWN", "LEFT", "RIGHT"]
-    # Pick a direction at random
-    step = random.choice(directions)
-    # Move the object according to the direction
-    if step == "RIGHT":
-        x[i] = x[i - 1] + 1
-        y[i] = y[i - 1]
-    elif step == "LEFT":
-        x[i] = x[i - 1] - 1
-        y[i] = y[i - 1]
-
-    elif step == "UP":
-        x[i] = x[i - 1]
-        y[i] = y[i - 1] + 1
-    elif step == "DOWN":
-        x[i] = x[i - 1]
-        y[i] = y[i - 1] - 1
-
-    adjacent = checkAdjacent(x, y, i, max)
-    x[adjacent+1:] = np.zeros(n-adjacent-1)
-    y[adjacent+1:] = np.zeros(n-adjacent-1)
-    i = adjacent
-    i += 1
-
-    # Return all the x and y positions of the object
-    return i
-
-
-# x = np.zeros(50)
-# y = np.zeros(50)
-# randomwalk2D(50, x, y, 30)
-# plt.plot(x, y)
-# plt.show()
+print(loop_erased([], grid))
