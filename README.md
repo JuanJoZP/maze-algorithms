@@ -1,3 +1,3 @@
-# (INCOMPLETO) laberinto
+# laberinto
 
-juego basico en pygame que implemente distintos algoritmos de creacion de laberintod y su visualizacion, se pueda jugar y adicionalmente implemente un algoritmo para encontrar la salida del laberinto
+programa de pygame en el que se puede visualizar la generacion procedural de un laberinto generado mediante el [algoritmo de Wilson](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Wilson's_algorithm)
