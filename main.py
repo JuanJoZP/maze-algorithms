@@ -1,7 +1,7 @@
 import sys
 import pygame
 import numpy as np
-from pygame import init, display, draw, event
+from pygame import init, display, draw, event, key
 
 from time import sleep
 from grid import Grid
@@ -86,10 +86,33 @@ while True:
     if finished:
         break
 
-while True:
+grid.color_cell(0, 0, 3)
+grid.color_cell(n_cellx - 1, n_celly - 1, 3)
+
+# colorear las paredes si estan en 1
+
+while grid.player_pos != (n_cellx - 1, n_celly - 1):
     for e in event.get():
         if e.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        if e.type == pygame.KEYDOWN:
+            if e.key == pygame.K_w:
+                grid.move_player("up")
+            if e.key == pygame.K_a:
+                grid.move_player("left")
+            if e.key == pygame.K_s:
+                grid.move_player("down")
+            if e.key == pygame.K_d:
+                grid.move_player("right")
+            if e.key == pygame.K_RETURN:
+                break  # start auto solve
 
-    # start resolving maze
+    grid.draw()
+    display.flip()
+
+while grid.player_pos != (n_cellx - 1, n_celly - 1):
+    pass
+    # crear un metodo que mire las casillas libres aledañas
+    # agregar las casillas aledañas a una pila
+    # mover el jugador a la casilla siguiente en la pila

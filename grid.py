@@ -1,5 +1,6 @@
 from pygame import draw
 import numpy as np
+import math
 
 
 class Grid:
@@ -18,6 +19,71 @@ class Grid:
         self.wall_state = np.zeros((n_cellx, n_celly, 2), dtype=int)
         self.width_cell = (screen.get_width() - (n_cellx - 1) * wall_thick) / n_cellx
         self.height_cell = (screen.get_height() - (n_celly - 1) * wall_thick) / n_celly
+
+        self.player_pos = [0, 0]
+        self.player_queue = []
+
+    def get_end(self, start, direction, move=None):
+        if move == None:
+            move = self.width_cell + self.wall_thick
+
+        if direction == "up":
+            return (start[0], start[1] - move)
+        if direction == "down":
+            return (start[0], start[1] + move)
+        if direction == "left":
+            return (start[0] - move, start[1])
+        if direction == "right":
+            return (start[0] + move, start[1])
+
+    def is_inverse(self, dir1, dir2):
+        if dir2 is None:
+            return False
+
+        if dir1 == "up" and dir2 == "down":
+            return True
+        if dir2 == "up" and dir1 == "down":
+            return True
+        if dir1 == "left" and dir2 == "right":
+            return True
+        if dir2 == "left" and dir1 == "right":
+            return True
+
+        return False
+
+    def move_player(self, direction):
+        player_queue = self.player_queue
+        player_pos = self.player_pos
+
+        move = self.get_end(self.player_pos, direction, 1)
+
+        # no move if out of bounds
+        if np.any((np.asarray(move) < 0) | (np.asarray(move) >= self.n_cellx)):
+            return
+
+        # no move if wall
+        if direction == "up" or direction == "down":
+            if self.wall_state[player_pos[0]][min(move[1], player_pos[1])][1] == 0:
+                print("pared arriba a abajo")
+                print("pos:", player_pos)
+                print("move:", move)
+                print("y:", min(move[1], player_pos[1]))
+                print("x:", move[0])
+                return
+        if direction == "left" or direction == "right":
+            if self.wall_state[min(move[0], player_pos[0])][player_pos[1]][0] == 0:
+                print("pared izq a der")
+                return
+
+        # move
+        self.player_pos = move
+
+        if self.is_inverse(
+            direction, player_queue[-1] if len(player_queue) != 0 else None
+        ):
+            player_queue.pop()
+        else:
+            player_queue.append(direction)
 
     def color_cell(self, x1, x2, color):
         self.cell_state[x1][x2] = color
@@ -38,7 +104,7 @@ class Grid:
             else:  # right move
                 self.color_wall(previous[0], previous[1], 0, color)
 
-        else: 
+        else:
             raise ValueError("Diagonal moves are not posible")
 
         self.color_cell(to[0], to[1], color)
@@ -52,6 +118,7 @@ class Grid:
         wall_state = self.wall_state
         width_cell = self.width_cell
         height_cell = self.height_cell
+        player_queue = self.player_queue
 
         for y in range(n_cellx):
             for x in range(n_celly):
@@ -75,6 +142,17 @@ class Grid:
                     draw.polygon(screen, (255, 255, 255), cell)
                 elif cell_state[x][y] == 2:
                     draw.polygon(screen, (255, 0, 0), cell)
+                elif cell_state[x][y] == 3:
+                    draw.polygon(screen, (255, 255, 255), cell)
+                    draw.circle(
+                        screen,
+                        (255, 0, 0),
+                        (
+                            x * (width_cell + wall_thick) + width_cell / 2,
+                            y * (height_cell + wall_thick) + height_cell / 2,
+                        ),
+                        width_cell * 0.3,
+                    )
                 else:
                     draw.polygon(screen, (0, 0, 0), cell)
 
@@ -136,3 +214,12 @@ class Grid:
 
                     if wall_state[x][y][1] and not wall_state[x][y][0]:
                         draw.polygon(screen, (0, 0, 0), wall_v)
+
+                # player
+                start = (width_cell / 2, width_cell / 2)
+                for direction in player_queue:
+                    end = self.get_end(start, direction)
+                    draw.line(
+                        screen, (255, 0, 0), start, end, math.ceil(self.n_cellx / 5)
+                    )
+                    start = end
