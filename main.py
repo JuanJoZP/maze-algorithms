@@ -8,6 +8,8 @@ from grid import Grid
 from random import choice
 from random import randint
 
+import time
+
 # pygame init
 init()
 
@@ -90,8 +92,8 @@ grid.color_cell(0, 0, 3)
 grid.color_cell(n_cellx - 1, n_celly - 1, 3)
 
 # colorear las paredes si estan en 1
-
-while grid.player_pos != (n_cellx - 1, n_celly - 1):
+flag = True
+while grid.player_pos != (n_cellx - 1, n_celly - 1) and flag:
     for e in event.get():
         if e.type == pygame.QUIT:
             pygame.quit()
@@ -106,13 +108,55 @@ while grid.player_pos != (n_cellx - 1, n_celly - 1):
             if e.key == pygame.K_d:
                 grid.move_player("right")
             if e.key == pygame.K_RETURN:
-                break  # start auto solve
+                flag = False  # start auto solve
 
     grid.draw()
     display.flip()
 
+stack = []
+path = [[0, 0]]
+visited = []
 while grid.player_pos != (n_cellx - 1, n_celly - 1):
-    pass
-    # crear un metodo que mire las casillas libres aledañas
-    # agregar las casillas aledañas a una pila
-    # mover el jugador a la casilla siguiente en la pila
+    for e in event.get():
+        if e.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if e.type == pygame.KEYDOWN:
+            if e.key == pygame.K_w:
+                grid.move_player("up")
+            if e.key == pygame.K_a:
+                grid.move_player("left")
+            if e.key == pygame.K_s:
+                grid.move_player("down")
+            if e.key == pygame.K_d:
+                grid.move_player("right")
+
+    free = grid.get_free(grid.player_pos[0], grid.player_pos[1])
+    stack.extend(
+        (set(tuple(i) for i in free) - set(tuple(i) for i in path))
+        - set(tuple(i) for i in visited)  # para mantener un orden quitar lo de set
+    )
+    direction = grid.can_move(path[-1], stack[-1])
+    print("stack:", stack)
+    print("path:", path)
+    if direction:
+        print("moving")
+        grid.move_player(direction)
+        path.append(stack[-1])
+        visited.append(stack[-1])
+        stack.pop()
+    else:
+        # quitar casillas del path hasta estar en una aledaña a la siguiente en la pila, moviendo el jugador al tiempo
+        print("no move")
+        while not direction:
+            grid.move_player(grid.get_direction(path[-1], path[-2]))
+            path.pop()
+            direction = grid.can_move(path[-1], stack[-1])
+        grid.move_player(direction)
+        path.append(stack[-1])
+        visited.append(stack[-1])
+        stack.pop()
+
+    grid.draw()
+    display.flip()
+    time.sleep(1)

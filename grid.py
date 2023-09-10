@@ -23,6 +23,61 @@ class Grid:
         self.player_pos = [0, 0]
         self.player_queue = []
 
+    def get_free(self, pivotx, pivoty):
+        free = []
+        if self.wall_state[pivotx][pivoty][0]:  # right
+            free.append([pivotx + 1, pivoty])
+
+        if self.wall_state[pivotx - 1][pivoty][0]:  # left
+            free.append([pivotx - 1, pivoty])
+
+        if self.wall_state[pivotx][pivoty][1]:  # down
+            free.append([pivotx, pivoty + 1])
+
+        if self.wall_state[pivotx][pivoty - 1][1]:  # up
+            free.append([pivotx, pivoty - 1])
+
+        return free
+
+    def can_move(self, start, end):
+        if start[0] != end[0] and start[1] != end[1]:
+            return None
+
+        if start[0] == end[0]:  # vertical
+            if abs(start[1] - end[1]) > 1:
+                return None
+            else:
+                if start[1] > end[1]:
+                    return "up"
+                elif start[1] < end[1]:
+                    return "down"
+                else:
+                    raise ValueError("Can not move to the same point")
+
+        if start[1] == end[1]:  # horizontal
+            if abs(start[0] - end[0]) > 1:
+                return None
+            else:
+                if start[0] > end[0]:
+                    return "left"
+                elif start[0] < end[0]:
+                    return "right"
+                else:
+                    raise ValueError("Can not move to the same point")
+
+    def get_direction(self, start, end):
+        if start[0] != end[0] and start[1] != end[1]:
+            raise ValueError("Diagonal moves are not posible")
+
+        if start[1] > end[1]:
+            return "up"
+        if start[1] < end[1]:
+            return "down"
+        if start[0] > end[0]:
+            return "left"
+        if start[0] < end[0]:
+            return "right"
+
     def get_end(self, start, direction, move=None):
         if move == None:
             move = self.width_cell + self.wall_thick
@@ -64,15 +119,9 @@ class Grid:
         # no move if wall
         if direction == "up" or direction == "down":
             if self.wall_state[player_pos[0]][min(move[1], player_pos[1])][1] == 0:
-                print("pared arriba a abajo")
-                print("pos:", player_pos)
-                print("move:", move)
-                print("y:", min(move[1], player_pos[1]))
-                print("x:", move[0])
                 return
         if direction == "left" or direction == "right":
             if self.wall_state[min(move[0], player_pos[0])][player_pos[1]][0] == 0:
-                print("pared izq a der")
                 return
 
         # move
