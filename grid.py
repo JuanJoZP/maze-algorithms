@@ -3,6 +3,7 @@ import numpy as np
 import math
 
 
+# class managing the grid rendering and the player movement
 class Grid:
     def __init__(
         self,
@@ -23,6 +24,7 @@ class Grid:
         self.player_pos = [0, 0]
         self.player_queue = []
 
+    # returns the window coordinates resulting of moving from 'start' in 'direction'
     def get_end(self, start, direction, move=None):
         if move == None:
             move = self.width_cell + self.wall_thick
@@ -36,6 +38,7 @@ class Grid:
         if direction == "right":
             return (start[0] + move, start[1])
 
+    # returns true if dir1 is the opposite direction of dir2
     def is_inverse(self, dir1, dir2):
         if dir2 is None:
             return False
@@ -57,30 +60,22 @@ class Grid:
 
         move = self.get_end(self.player_pos, direction, 1)
 
-        # no move if out of bounds
+        # wont move if the movement is out of bounds
         if np.any((np.asarray(move) < 0) | (np.asarray(move) >= self.n_cellx)):
             return
 
-        # no move if wall
+        # wont move if the movement meets a wall
         if direction == "up" or direction == "down":
             if self.wall_state[player_pos[0]][min(move[1], player_pos[1])][1] == 0:
-                print("pared arriba a abajo")
-                print("pos:", player_pos)
-                print("move:", move)
-                print("y:", min(move[1], player_pos[1]))
-                print("x:", move[0])
                 return
         if direction == "left" or direction == "right":
             if self.wall_state[min(move[0], player_pos[0])][player_pos[1]][0] == 0:
-                print("pared izq a der")
                 return
 
         # move
         self.player_pos = move
 
-        if self.is_inverse(
-            direction, player_queue[-1] if len(player_queue) != 0 else None
-        ):
+        if self.is_inverse(direction, player_queue[-1] if len(player_queue) != 0 else None):
             player_queue.pop()
         else:
             player_queue.append(direction)
@@ -138,11 +133,11 @@ class Grid:
                     ),
                 ]
 
-                if cell_state[x][y] == 1:
+                if cell_state[x][y] == 1:  # white cells (corridors)
                     draw.polygon(screen, (255, 255, 255), cell)
-                elif cell_state[x][y] == 2:
+                elif cell_state[x][y] == 2:  # red cells (cells in generation process)
                     draw.polygon(screen, (255, 0, 0), cell)
-                elif cell_state[x][y] == 3:
+                elif cell_state[x][y] == 3:  # white cell with a red circle (start and end)
                     draw.polygon(screen, (255, 255, 255), cell)
                     draw.circle(
                         screen,
@@ -157,9 +152,7 @@ class Grid:
                     draw.polygon(screen, (0, 0, 0), cell)
 
                 # walls
-                if (
-                    x != n_cellx - 1 or y != n_celly - 1
-                ):  # last iteration draws no walls
+                if x != n_cellx - 1 or y != n_celly - 1:  # last iteration draws no walls
                     wall_v = [  # vertical
                         (
                             x * (width_cell + wall_thick) + width_cell,
@@ -215,11 +208,11 @@ class Grid:
                     if wall_state[x][y][1] and not wall_state[x][y][0]:
                         draw.polygon(screen, (0, 0, 0), wall_v)
 
-                # player
+                # draws player
                 start = (width_cell / 2, width_cell / 2)
                 for direction in player_queue:
                     end = self.get_end(start, direction)
                     draw.line(
                         screen, (255, 0, 0), start, end, math.ceil(self.n_cellx / 5)
-                    )
+                    )  # red line
                     start = end
